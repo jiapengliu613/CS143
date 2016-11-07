@@ -142,7 +142,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 
   RC rc;
   RecordFile rf;
-  if (rc = rf.open(table+'tbl', 'w') < 0) {
+  if (rc = rf.open(table+".tbl", 'w') < 0) {
     fprintf(stderr, "Open Table Failed\n");
     return rc;
   }
