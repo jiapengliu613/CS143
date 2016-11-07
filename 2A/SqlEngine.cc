@@ -136,14 +136,14 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   ifstream infile;
   infile.open(loadfile.c_str(), std::ifstream::in);
   if (!infile.is_open()) {
-    fprintf(stderr, "Open File Failed\n");
-    return -1;
+    fprintf(stderr, "Open file ％s failed\n", loadfile.c_str());
+    return RC_FILE_OPEN_FAILED;
   }
 
   RC rc;
   RecordFile rf;
-  if (rc = rf.open(table+".tbl", 'w') < 0) {
-    fprintf(stderr, "Open Table Failed\n");
+  if (rc = rf.open(table + ".tbl", 'w') < 0) {
+    fprintf(stderr, "Open table %s failed\n", table.c_str());
     return rc;
   }
 
@@ -151,23 +151,22 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   string line;
   int key;
   string value;
-  while (infile.good()) {
+  while (!infile.eof() && infile.good()) {
     getline(infile, line);
-    if (rc = parseLoadLine(line, key, value) < 0) {
-      fprintf(stderr, "Parsing Line Failed\n");
-      return rc;
+    if ((rc = parseLoadLine(line, key, value)) < 0) {
+      fprintf(stderr, "Parsing line failed\n");
+      goto exit_load;
     }
-    if (rc = rf.append(key, value, rid) < 0) {
+    if ((rc = rf.append(key, value, rid)) < 0) {
       fprintf(stderr, "Appending failed\n");
-      return rc;
+      goto exit_load;
     }
     
   }
+  exit_load:
   infile.close();
-
-
-
-  return 0;
+  rf.close();
+  return rc;
 }
 
 RC SqlEngine::parseLoadLine(const string& line, int& key, string& value)
