@@ -136,7 +136,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   ifstream infile;
   infile.open(loadfile.c_str(), std::ifstream::in);
   if (!infile.is_open()) {
-    fprintf(stderr, "Open file ％s failed\n", loadfile.c_str());
+    fprintf(stderr, "Open file %s failed\n", loadfile.c_str());
     return RC_FILE_OPEN_FAILED;
   }
 
@@ -151,18 +151,21 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   string line;
   int key;
   string value;
+  int cnt = 0;
   while (!infile.eof() && infile.good()) {
     getline(infile, line);
+    if (line == "") continue;
     if ((rc = parseLoadLine(line, key, value)) < 0) {
-      fprintf(stderr, "Parsing line failed\n");
+      fprintf(stderr, "Parsing line %d failed\n", cnt);
       goto exit_load;
     }
     if ((rc = rf.append(key, value, rid)) < 0) {
       fprintf(stderr, "Appending failed\n");
       goto exit_load;
     }
-    
+    cnt++;
   }
+  fprintf(stdout, "Load succeeded! %d lines loaded\n", cnt);
   exit_load:
   infile.close();
   rf.close();
