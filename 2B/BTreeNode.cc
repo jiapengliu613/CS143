@@ -78,9 +78,12 @@ RC BTLeafNode::insert(int key, const RecordId& rid) {
 		offset += sizeof(rid);
 		memcpy(buffer + offset, &key, sizeof(int));
 	}
+	// update count
 	count++;
 	memcpy(buffer, &count, sizeof(int));
-	
+
+
+
 	return 0; 
 }
 
@@ -137,7 +140,12 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 		}
 	}
 
-
+	//update pointer
+	sibling.setNextNodePtr(this->getNextNodePtr());
+	PageId nextPid;
+	offset = PageFile::PAGE_SIZE - sizeof(PageId);
+	memcpy(&nextPid, sibling.buffer + offset, sizeof(PageId));
+	memcpy(buffer + offset, &nextPid, sizeof(PageId));
 	return 0; 
 }
 

@@ -13,7 +13,8 @@
 #include "RecordFile.h"
 #include "PageFile.h"
 #include <cstring>
-
+#include <iostream>
+#include <fstream>
 /**
  * BTLeafNode: The class representing a B+tree leaf node.
  */
@@ -187,8 +188,9 @@ class BTNonLeafNode {
      * @return 0 if successful. Return an error code if there is an error.
      */
     RC searchKeyPos (int key, int &i, int &offset, int &keyCount);
-    static int KEY_CAPACITY = (PageFile::PAGE_SIZE - sizeof(int) - sizeof(PageId)) / SIZE_OF_KEY_PAGEID);
-    static int SIZE_OF_KEY_PAGEID = sizeof(int) + sizeof(PageId);
+    static const int SIZE_OF_KEY_PAGEID = sizeof(int) + sizeof(PageId);
+    static const int KEY_CAPACITY = (PageFile::PAGE_SIZE - sizeof(int) - sizeof(PageId)) / SIZE_OF_KEY_PAGEID;
+    
 
   private:
    /**
