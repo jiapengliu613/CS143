@@ -178,6 +178,17 @@ class BTNonLeafNode {
     * @return 0 if successful. Return an error code if there is an error.
     */
     RC write(PageId pid, PageFile& pf);
+    /**
+     * search key position in non-leaf node
+     * @param key[IN] key to search
+     * @param i[OUT]
+     * @param offset[OUT] address offset
+     * @param keyCount[OUT] number of keys
+     * @return 0 if successful. Return an error code if there is an error.
+     */
+    RC searchKeyPos (int key, int &i, int &offset, int &keyCount);
+    static int KEY_CAPACITY = (PageFile::PAGE_SIZE - sizeof(int) - sizeof(PageId)) / SIZE_OF_KEY_PAGEID);
+    static int SIZE_OF_KEY_PAGEID = sizeof(int) + sizeof(PageId);
 
   private:
    /**
