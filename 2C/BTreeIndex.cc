@@ -31,7 +31,7 @@ BTreeIndex::BTreeIndex()
 RC BTreeIndex::open(const string& indexname, char mode)
 {
 	RC rc;
-	if ((rc = pf.open(indexname, mode) < 0)) {
+	if ((rc = pf.open(indexname, mode)) < 0) {
 		return rc;
 	}
 	char tmpBuffer[PageFile::PAGE_SIZE];
@@ -47,7 +47,7 @@ RC BTreeIndex::open(const string& indexname, char mode)
 	} else {
 		//index is already initialized
 		
-		if ((rc = pf.read(0, tmpBuffer) < 0)) {
+		if ((rc = pf.read(0, tmpBuffer)) < 0) {
 			return rc;
 		}
 		memcpy(&rootPid, &tmpBuffer, sizeof(PageId));
