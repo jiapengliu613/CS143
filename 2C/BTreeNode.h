@@ -29,6 +29,7 @@ class BTLeafNode {
     * @param rid[IN] the RecordId to insert
     * @return 0 if successful. Return an error code if the node is full.
     */
+    BTLeafNode();
     RC insert(int key, const RecordId& rid);
 
    /**

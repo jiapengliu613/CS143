@@ -8,6 +8,11 @@ using namespace std;
  * @param pf[IN] PageFile to read from
  * @return 0 if successful. Return an error code if there is an error.
  */
+BTLeafNode::BTLeafNode() {
+	int count = 0;
+	memcpy(buffer, &count, sizeof(int));
+}
+
 RC BTLeafNode::read(PageId pid, const PageFile& pf) { 
 	RC rc;
 	if (pid < 0 || pid > pf.endPid()) {

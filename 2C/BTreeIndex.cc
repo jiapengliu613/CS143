@@ -17,7 +17,8 @@ using namespace std;
  */
 BTreeIndex::BTreeIndex()
 {
-    rootPid = -1;
+    rootPid = 1;
+    height = 1;
 }
 
 /*
@@ -29,6 +30,33 @@ BTreeIndex::BTreeIndex()
  */
 RC BTreeIndex::open(const string& indexname, char mode)
 {
+	RC rc;
+	if ((rc = pf.open(indexname, mode)) < 0) {
+		return rc;
+	}
+	char tmpBuffer[PageFile::PAGE_SIZE];
+	int offset;
+	if (pf.endPid() == 0) {
+		// index not initialized yet
+		BTLeafNode firstNode;
+		memcpy(&tmpBuffer, &rootPid, sizeof(PageId));
+		offset = sizeof(PageId);
+		memcpy(&tmpBuffer + offset, &height, sizeof(int));
+		pf.write(0, tmpBuffer);
+		//write firstnode into pagefile;
+		firstNode.write(1, pf);
+
+
+	} else {
+		//index is already initialized
+		
+		if ((rc = pf.read(0, tmpBuffer)) < 0) {
+			return rc;
+		}
+		memcpy(&rootPid, &tmpBuffer, sizeof(PageId));
+		offset = sizeof(PageId);
+		memcpy(&height, &tmpBuffer + offset, sizeof(int));
+	}
     return 0;
 }
 
