@@ -68,7 +68,17 @@ RC BTreeIndex::open(const string& indexname, char mode)
  */
 RC BTreeIndex::close()
 {
-    return 0;
+	char tmpBuffer[PageFile::PAGE_SIZE];
+	memcpy(&tmpBuffer, &rootPid, sizeof(PageId));
+	int offset = sizeof(PageId);
+	memcpy(&tmpBuffer + offset, &treeHeight, sizeof(int));
+	RC rc;
+	rc = pf.write(0, tmpBuffer);
+	if (rc < 0) {
+		return rc;
+	}
+
+    return pf.close();
 }
 
 /*
