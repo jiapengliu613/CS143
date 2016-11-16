@@ -43,6 +43,9 @@ RC BTreeIndex::open(const string& indexname, char mode)
 		offset = sizeof(PageId);
 		memcpy(&tmpBuffer + offset, &height, sizeof(int));
 		pf.write(0, tmpBuffer);
+		//write firstnode into pagefile;
+		firstNode.write(1, pf);
+
 
 	} else {
 		//index is already initialized
