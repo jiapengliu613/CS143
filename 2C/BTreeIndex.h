@@ -89,7 +89,7 @@ class BTreeIndex {
    * @return error code. 0 if no error
    */
   RC readForward(IndexCursor& cursor, int& key, RecordId& rid);
-
+  RC recursiveInsert(int curLevel, PageId path[], int key, const RecordId& rid, const PageId& pid);
   RC pathRecord(PageId path[], int curLevel, int key, IndexCursor& cursor);
   
  private:
