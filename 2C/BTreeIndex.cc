@@ -84,11 +84,41 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 
 
 //Record the path from root to leaf when searching for a key
-RC pathRecord(PageId rootPid, PageId path[], int& curLevel, int key) {
-	if (rootPid < 1) {
-		return RC_INVALID_PID;
+RC BTreeIndex::pathRecord(PageId path[], int curLevel, int key, IndexCursor& cursor) {
+
+	RC rc;
+	if (curLevel == treeHeight) {
+		BTLeafNode leaf;
+		rc = leaf.read(path[curLevel - 1], pf);
+		if (rc < 0) {
+			return RC_FILE_READ_FAILED;
+		}
+		int eid;
+		rc = leaf.locate(path[curLevel - 1], eid);
+		if (rc < 0) {
+			return RC_NO_SUCH_RECORD; 
+		}
+		cursor.pid = path[curLevel - 1];
+		cursor.eid= eid;
+		return rc;
+
+	} else {
+		BTNonLeafNode nonLeaf;
+		rc = nonLeaf.read(path[curLevel - 1], pf);
+		if (rc < 0) {
+			return RC_FILE_READ_FAILED;
+		}
+		PageId childPid;
+		rc = nonLeaf.locateChildPtr(key, childPid);
+		if (rc < 0) {
+			return rc;
+		}
+		path[curLevel] = childPid;
+		rc = pathRecord(path, curLevel + 1, key, cursor);
+		return rc;
 	}
-	return 0;
+
+	
 
 }
 
@@ -115,7 +145,13 @@ RC pathRecord(PageId rootPid, PageId path[], int& curLevel, int key) {
 
 RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 {
-    return 0;
+	RC rc;
+	PageId path[treeHeight];
+	path[0] = rootPid;
+	int curLevel = 1;
+	rc = pathRecord(path, curLevel, searchKey, cursor);
+
+    return rc;
 }
 
 /*

@@ -90,7 +90,7 @@ class BTreeIndex {
    */
   RC readForward(IndexCursor& cursor, int& key, RecordId& rid);
 
-  RC pathRecord(PageId rootPid, PageId path[], int &curLevel, int key);
+  RC pathRecord(PageId path[], int curLevel, int key, IndexCursor& cursor);
   
  private:
   PageFile pf;         /// the PageFile used to store the actual b+tree in disk
