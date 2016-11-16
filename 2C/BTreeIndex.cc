@@ -18,7 +18,7 @@ using namespace std;
 BTreeIndex::BTreeIndex()
 {
     rootPid = 1;
-    height = 1;
+    treeHeight = 1;
 }
 
 /*
@@ -37,25 +37,27 @@ RC BTreeIndex::open(const string& indexname, char mode)
 	char tmpBuffer[PageFile::PAGE_SIZE];
 	int offset;
 	if (pf.endPid() == 0) {
-		// index not initialized yet
+
+		// index not initialized yet, need to initialize a leafnode
 		BTLeafNode firstNode;
 		memcpy(&tmpBuffer, &rootPid, sizeof(PageId));
 		offset = sizeof(PageId);
-		memcpy(&tmpBuffer + offset, &height, sizeof(int));
+		memcpy(&tmpBuffer + offset, &treeHeight, sizeof(int));
 		pf.write(0, tmpBuffer);
+
 		//write firstnode into pagefile;
 		firstNode.write(1, pf);
 
 
 	} else {
-		//index is already initialized
+		//index is already initialized, read the rootPid and height of the tree
 		
 		if ((rc = pf.read(0, tmpBuffer)) < 0) {
 			return rc;
 		}
 		memcpy(&rootPid, &tmpBuffer, sizeof(PageId));
 		offset = sizeof(PageId);
-		memcpy(&height, &tmpBuffer + offset, sizeof(int));
+		memcpy(&treeHeight, &tmpBuffer + offset, sizeof(int));
 	}
     return 0;
 }
@@ -80,6 +82,17 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
     return 0;
 }
 
+
+//Record the path from root to leaf when searching for a key
+RC pathRecord(PageId rootPid, PageId path[], int& curLevel, int key) {
+	if (rootPid < 1) {
+		return RC_INVALID_PID;
+	}
+	return 0;
+
+}
+
+
 /**
  * Run the standard B+Tree key search algorithm and identify the
  * leaf node where searchKey may exist. If an index entry with
@@ -98,6 +111,8 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
  *                    smaller than searchKey.
  * @return 0 if searchKey is found. Othewise an error code
  */
+
+
 RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 {
     return 0;
