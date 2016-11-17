@@ -95,15 +95,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
     if ((rc = pathRecord(path, 1, key, cursor)) < 0) return rc;
     return recursiveInsert(0, path, key, rid, 0);
 }
-/*
- * Recursive function execute actual insertion process
- * @param curLevel[IN] current level start from 0
- * @param path[][IN] path recording insertion
- * @param key[OUT] the key insert, for leaf, non-leaf and new root
- * @param rid[OUT] the rid insert upwards, for leaf only
- * @param pid[OUT] the pid insert upwards, for new root only
- *
- */
+
 RC BTreeIndex::recursiveInsert(int curLevel, PageId path[], int key, const RecordId& rid, const PageId& pid) {
     RC rc;
     // insert a new root, after this this function stops
@@ -111,11 +103,11 @@ RC BTreeIndex::recursiveInsert(int curLevel, PageId path[], int key, const Recor
         BTNonLeafNode newRoot;
         rootPid = pf.endPid();
         treeHeight++;
-        newRoot.initializeRoot(path[0],key,pid);
+        newRoot.initializeRoot(path[curLevel - 1],key,pid);
         newRoot.write(rootPid, pf);
         char rootInfo[PageFile::PAGE_SIZE];
         memcpy(rootInfo, &rootPid, sizeof(PageId));
-        memcpy(rootInfo + sizeof(PageId), &treeHeight, sizeof(int));
+        memcpy(rootInfo, &treeHeight, sizeof(int));
         pf.write(0, rootInfo);
         return 0;
     }
@@ -123,7 +115,7 @@ RC BTreeIndex::recursiveInsert(int curLevel, PageId path[], int key, const Recor
         BTLeafNode leaf;
         leaf.read(path[treeHeight - curLevel - 1],pf);// read data into root1's buffer
         //TODO: double check the capacity
-        if(leaf.getKeyCount() < leaf.MAX_ENTRY_NUM) {
+        if(leaf.getKeyCount() < leaf.ENTRY_SIZE) {
             if ((rc = leaf.insert(key, rid)) < 0) return rc;
             if ((rc = leaf.write(path[treeHeight - curLevel - 1], pf)) < 0) return rc;
             return 0;
@@ -133,7 +125,6 @@ RC BTreeIndex::recursiveInsert(int curLevel, PageId path[], int key, const Recor
             int newKey;
             BTLeafNode newSibling;
             if ((rc = leaf.insertAndSplit(key, rid, newSibling, newKey)) < 0) return rc;
-            if ((rc = newSibling.setNextNodePtr(leaf.getNextNodePtr())) < 0) return rc;
             if ((rc = leaf.setNextNodePtr(newSiblingId)) < 0) return rc;
             if ((rc = leaf.write(path[treeHeight - curLevel - 1], pf)) < 0) return rc;
             if ((rc = newSibling.write(newSiblingId, pf)) < 0) return rc;
@@ -160,6 +151,8 @@ RC BTreeIndex::recursiveInsert(int curLevel, PageId path[], int key, const Recor
         }
     }
 }
+
+
 
 //Record the path from root to leaf when searching for a key
 RC BTreeIndex::pathRecord(PageId path[], int curLevel, int key, IndexCursor& cursor) {
