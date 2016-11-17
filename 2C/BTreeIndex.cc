@@ -89,8 +89,69 @@ RC BTreeIndex::close()
  */
 RC BTreeIndex::insert(int key, const RecordId& rid)
 {
-    return 0;
+    RC rc;
+    PageId path[treeHeight];
+    IndexCursor cursor;
+    if ((rc = pathRecord(path, 1, key, cursor)) < 0) return rc;
+    return recursiveInsert(0, path, key, rid, 0);
 }
+
+RC BTreeIndex::recursiveInsert(int curLevel, PageId path[], int key, const RecordId& rid, const PageId& pid) {
+    RC rc;
+    // insert a new root, after this this function stops
+    if(curLevel == treeHeight) {
+        BTNonLeafNode newRoot;
+        rootPid = pf.endPid();
+        treeHeight++;
+        newRoot.initializeRoot(path[curLevel - 1],key,pid);
+        newRoot.write(rootPid, pf);
+        char rootInfo[PageFile::PAGE_SIZE];
+        memcpy(rootInfo, &rootPid, sizeof(PageId));
+        memcpy(rootInfo, &treeHeight, sizeof(int));
+        pf.write(0, rootInfo);
+        return 0;
+    }
+    if(curLevel == 0) {
+        BTLeafNode leaf;
+        leaf.read(path[treeHeight - curLevel - 1],pf);// read data into root1's buffer
+        //TODO: double check the capacity
+        if(leaf.getKeyCount() < leaf.ENTRY_SIZE) {
+            if ((rc = leaf.insert(key, rid)) < 0) return rc;
+            if ((rc = leaf.write(path[treeHeight - curLevel - 1], pf)) < 0) return rc;
+            return 0;
+        }
+        else{
+            PageId newSiblingId = pf.endPid();
+            int newKey;
+            BTLeafNode newSibling;
+            if ((rc = leaf.insertAndSplit(key, rid, newSibling, newKey)) < 0) return rc;
+            if ((rc = leaf.setNextNodePtr(newSiblingId)) < 0) return rc;
+            if ((rc = leaf.write(path[treeHeight - curLevel - 1], pf)) < 0) return rc;
+            if ((rc = newSibling.write(newSiblingId, pf)) < 0) return rc;
+            return recursiveInsert(curLevel + 1, path, newKey, rid, newSiblingId);
+        }
+
+    }
+    else {
+        BTNonLeafNode node;
+        node.read(path[treeHeight - curLevel - 1],pf);
+        if(node.getKeyCount() < node.KEY_CAPACITY) {
+            if ((rc = node.insert(key, pid)) < 0) return rc;
+            if ((rc = node.write(path[treeHeight - curLevel - 1], pf)) < 0) return rc;
+            return 0;
+        }
+        else{
+            PageId newSiblingId = pf.endPid();
+            int newKey;
+            BTNonLeafNode newSibling;
+            if ((rc = node.insertAndSplit(key, pid, newSibling, newKey)) < 0) return rc;
+            if ((rc = node.write(path[treeHeight - curLevel - 1], pf)) < 0) return rc;
+            if ((rc = newSibling.write(newSiblingId, pf)) < 0) return rc;
+            return recursiveInsert(curLevel + 1, path, newKey, rid, newSiblingId);
+        }
+    }
+}
+
 
 
 //Record the path from root to leaf when searching for a key
