@@ -89,8 +89,17 @@ class BTreeIndex {
    * @return error code. 0 if no error
    */
   RC readForward(IndexCursor& cursor, int& key, RecordId& rid);
-
-  RC pathRecord(PageId rootPid, PageId path[], int &curLevel, int key);
+  /**
+   * Recursive function execute actual insertion process
+   * @param curLevel[IN] current level start from 0
+   * @param path[][IN] path recording insertion
+   * @param key[OUT] the key insert, for leaf, non-leaf and new root
+   * @param rid[OUT] the rid insert upwards, for leaf only
+   * @param pid[OUT] the pid insert upwards, for new root only
+   * @return error code. 0 if no error
+   */
+  RC recursiveInsert(int curLevel, PageId path[], int key, const RecordId& rid, const PageId& pid);
+  RC pathRecord(PageId path[], int curLevel, int key, IndexCursor& cursor);
   
  private:
   PageFile pf;         /// the PageFile used to store the actual b+tree in disk
