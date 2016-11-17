@@ -11,6 +11,9 @@ using namespace std;
 BTLeafNode::BTLeafNode() {
 	int count = 0;
 	memcpy(buffer, &count, sizeof(int));
+	int pid = -1;
+	int offset = PageFile::PAGE_SIZE - sizeof(int);
+	memcpy(buffer + offset, &pid, sizeof(int));
 }
 
 RC BTLeafNode::read(PageId pid, const PageFile& pf) { 
@@ -146,11 +149,11 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 	}
 
 	//update pointer
-	sibling.setNextNodePtr(this->getNextNodePtr());
-	PageId nextPid;
-	offset = PageFile::PAGE_SIZE - sizeof(PageId);
-	memcpy(&nextPid, sibling.buffer + offset, sizeof(PageId));
-	memcpy(buffer + offset, &nextPid, sizeof(PageId));
+	//sibling.setNextNodePtr(this->getNextNodePtr());
+	//PageId nextPid;
+	//offset = PageFile::PAGE_SIZE - sizeof(PageId);
+	//memcpy(&nextPid, sibling.buffer + offset, sizeof(PageId));
+	//memcpy(buffer + offset, &nextPid, sizeof(PageId));
 	return 0; 
 }
 
@@ -210,7 +213,7 @@ PageId BTLeafNode::getNextNodePtr() {
 	PageId pid;
 	int offset = PageFile::PAGE_SIZE - sizeof(PageId);
 	memcpy(&pid, buffer + offset, sizeof(PageId));
-	return 0; 
+	return pid; 
 }
 
 /*
