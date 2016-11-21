@@ -282,7 +282,8 @@ RC BTNonLeafNode::insert(int key, PageId pid) {
     RC rc;
     if((rc = searchKeyPos(key, i, offset, keyCount)) < 0) return rc;
     if (keyCount == KEY_CAPACITY) return RC_NODE_FULL;
-    memmove(buffer + offset + sizeof(int), buffer + offset - sizeof(PageId), SIZE_OF_KEY_PAGEID * (keyCount - i));
+    memmove(buffer + offset + sizeof(int), buffer + offset - sizeof(PageId), SIZE_OF_KEY_PAGEID * (keyCount - i) +
+            sizeof(PageId));
     memcpy(buffer + offset, &key, sizeof(int));
     memcpy(buffer + offset - sizeof(PageId), &pid, sizeof(PageId));
     return 0;
@@ -306,8 +307,8 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
     
     char buffer_tmp[PageFile::PAGE_SIZE + SIZE_OF_KEY_PAGEID];
     memcpy(buffer_tmp, buffer, sizeof(buffer));
-    memmove(buffer_tmp + offset + sizeof(int), buffer_tmp + offset - sizeof(PageId), SIZE_OF_KEY_PAGEID * (keyCount - i));
-    memcpy(buffer_tmp + offset - sizeof(PageId), &pid, sizeof(PageId));
+    memmove(buffer_tmp + offset + SIZE_OF_KEY_PAGEID, buffer_tmp + offset, SIZE_OF_KEY_PAGEID * (keyCount - i));
+    memcpy(buffer_tmp + offset + sizeof(int), &pid, sizeof(PageId));
     memcpy(buffer_tmp + offset, &key, sizeof(int));
     
     int keyCountOfSibling;
@@ -317,10 +318,15 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
     int splitPos = (1 + keyCount) / 2;
     int numKeySilb = keyCount - splitPos;
     
-    memcpy(&midKey, buffer_tmp + sizeof(int) + splitPos * SIZE_OF_KEY_PAGEID, sizeof(int));
-    
+    memcpy(&midKey, buffer_tmp + sizeof(int) + sizeof(PageId) + splitPos * SIZE_OF_KEY_PAGEID, sizeof(int));
+
+    memset(buffer, 0, sizeof(buffer));
+    memcpy(buffer, &splitPos, sizeof(int));
+    memcpy(buffer + sizeof(int), buffer_tmp + sizeof(int), sizeof(PageId) + splitPos * SIZE_OF_KEY_PAGEID);
+
     memcpy(sibling.buffer, &numKeySilb, sizeof(int));
-    memcpy(sibling.buffer + sizeof(int), buffer_tmp + (1 + splitPos) * SIZE_OF_KEY_PAGEID + sizeof(int), numKeySilb * SIZE_OF_KEY_PAGEID);
+    memcpy(sibling.buffer + sizeof(int), buffer_tmp + (1 + splitPos) * SIZE_OF_KEY_PAGEID + sizeof(int), numKeySilb * SIZE_OF_KEY_PAGEID +
+            sizeof(PageId));
     return 0;
 }
 
