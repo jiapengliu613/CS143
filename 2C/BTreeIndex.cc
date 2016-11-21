@@ -21,7 +21,7 @@ BTreeIndex::BTreeIndex()
     treeHeight = 1;
 }
 
-/*
+/**
  * Open the index file in read or write mode.
  * Under 'w' mode, the index file should be created if it does not exist.
  * @param indexname[IN] the name of the index file
@@ -81,7 +81,7 @@ RC BTreeIndex::close()
     return pf.close();
 }
 
-/*
+/**
  * Insert (key, RecordId) pair to the index.
  * @param key[IN] the key for the value inserted into the index
  * @param rid[IN] the RecordId for the record being inserted into the index
@@ -91,11 +91,20 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 {
     RC rc;
     PageId path[treeHeight];
+    path[0] = rootPid;
     IndexCursor cursor;
     if ((rc = pathRecord(path, 1, key, cursor)) < 0) return rc;
     return recursiveInsert(0, path, key, rid, 0);
 }
-
+/**
+ * Recursive function execute actual insertion process
+ * @param curLevel[IN] current level start from 0
+ * @param path[][IN] path recording insertion
+ * @param key[OUT] the key insert, for leaf, non-leaf and new root
+ * @param rid[OUT] the rid insert upwards, for leaf only
+ * @param pid[OUT] the pid insert upwards, for new root only
+ *
+ */
 RC BTreeIndex::recursiveInsert(int curLevel, PageId path[], int key, const RecordId& rid, const PageId& pid) {
     RC rc;
     // insert a new root, after this this function stops
@@ -226,7 +235,7 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
     return rc;
 }
 
-/*
+/**
  * Read the (key, rid) pair at the location specified by the index cursor,
  * and move foward the cursor to the next entry.
  * @param cursor[IN/OUT] the cursor pointing to an leaf-node index entry in the b+tree
