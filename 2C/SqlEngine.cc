@@ -99,12 +99,14 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
           goto exit_select;
         }
         maxKey = value;
+        break;
       case SelCond::GE :
         if (value > maxKey) {
           fprintf(stderr, "Error: SearchKey is out of range%s\n", table.c_str());
           goto exit_select;
         }
         minKey = value;
+        break;
     } 
   }
 
@@ -267,6 +269,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 
   // close the table file and return
   exit_select:
+  bTree.close();
   rf.close();
   return rc;
 }
@@ -315,6 +318,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
       }
       if ((rc = bTreeIndex.insert(key, rid)) < 0) {
         fprintf(stderr, "Inserting into B+Tree failed!\n");
+        goto exit_load;
       }
       cnt++;
     }
